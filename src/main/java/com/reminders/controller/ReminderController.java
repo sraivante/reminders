@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class ReminderController {
@@ -46,38 +47,35 @@ public class ReminderController {
     public String createOrUpdate(
             @Valid @ModelAttribute("reminderForm") ReminderForm form,
             BindingResult bindingResult,
-            Model model
+            Model model,
+            RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
             return home(model);
         }
         reminderService.save(form);
-        model.addAttribute("message", "Reminder saved.");
-        model.addAttribute("reminderForm", new ReminderForm());
-        return home(model);
+        redirectAttributes.addFlashAttribute("message", "Reminder saved.");
+        return "redirect:/";
     }
 
     @PostMapping("/reminders/{id}/accept")
-    public String accept(@PathVariable Long id, Model model) {
+    public String accept(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         reminderService.acceptAndMoveToNextPeriod(id);
-        model.addAttribute("message", "Reminder accepted and moved to next period.");
-        model.addAttribute("reminderForm", new ReminderForm());
-        return home(model);
+        redirectAttributes.addFlashAttribute("message", "Reminder accepted and moved to next period.");
+        return "redirect:/";
     }
 
     @PostMapping("/reminders/{id}/toggle-active")
-    public String toggleActive(@PathVariable Long id, Model model) {
+    public String toggleActive(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         reminderService.toggleActive(id);
-        model.addAttribute("message", "Reminder status updated.");
-        model.addAttribute("reminderForm", new ReminderForm());
-        return home(model);
+        redirectAttributes.addFlashAttribute("message", "Reminder status updated.");
+        return "redirect:/";
     }
 
     @PostMapping("/reminders/{id}/delete")
-    public String delete(@PathVariable Long id, Model model) {
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         reminderService.delete(id);
-        model.addAttribute("message", "Reminder deleted.");
-        model.addAttribute("reminderForm", new ReminderForm());
-        return home(model);
+        redirectAttributes.addFlashAttribute("message", "Reminder deleted.");
+        return "redirect:/";
     }
 }

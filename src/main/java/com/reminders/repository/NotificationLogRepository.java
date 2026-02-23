@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface NotificationLogRepository extends JpaRepository<NotificationLog, Long> {
     boolean existsByReminderIdAndChannelAndSlotKey(Long reminderId, NotificationChannel channel, String slotKey);
+
+    long deleteByReminderId(Long reminderId);
 }

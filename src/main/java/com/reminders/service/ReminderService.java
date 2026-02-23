@@ -3,6 +3,7 @@ package com.reminders.service;
 import com.reminders.dto.ReminderForm;
 import com.reminders.model.Reminder;
 import com.reminders.model.ReminderCycle;
+import com.reminders.repository.NotificationLogRepository;
 import com.reminders.repository.ReminderRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
@@ -17,9 +18,11 @@ import org.springframework.util.StringUtils;
 public class ReminderService {
 
     private final ReminderRepository reminderRepository;
+    private final NotificationLogRepository notificationLogRepository;
 
-    public ReminderService(ReminderRepository reminderRepository) {
+    public ReminderService(ReminderRepository reminderRepository, NotificationLogRepository notificationLogRepository) {
         this.reminderRepository = reminderRepository;
+        this.notificationLogRepository = notificationLogRepository;
     }
 
     public List<Reminder> findAll() {
@@ -102,6 +105,7 @@ public class ReminderService {
 
     @Transactional
     public void delete(Long id) {
+        notificationLogRepository.deleteByReminderId(id);
         reminderRepository.deleteById(id);
     }
 
