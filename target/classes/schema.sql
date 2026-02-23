@@ -25,3 +25,20 @@ CREATE TABLE IF NOT EXISTS notification_log (
     CONSTRAINT uk_notification_slot UNIQUE (reminder_id, channel, slot_key),
     CONSTRAINT fk_notification_reminder FOREIGN KEY (reminder_id) REFERENCES reminder (id)
 );
+
+-- Legacy compatibility: older databases may still have sent_on as NOT NULL.
+SET @has_sent_on := (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'notification_log'
+      AND COLUMN_NAME = 'sent_on'
+);
+SET @sql_sent_on := IF(
+    @has_sent_on > 0,
+    'ALTER TABLE notification_log MODIFY COLUMN sent_on DATE NULL',
+    'SELECT 1'
+);
+PREPARE stmt_sent_on FROM @sql_sent_on;
+EXECUTE stmt_sent_on;
+DEALLOCATE PREPARE stmt_sent_on;
