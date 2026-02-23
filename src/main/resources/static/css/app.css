@@ -1,0 +1,119 @@
+:root {
+    --bg: #f2f5f8;
+    --card: #ffffff;
+    --text: #1f2937;
+    --accent: #0f766e;
+    --danger: #b91c1c;
+    --border: #d1d5db;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: var(--text);
+    background: linear-gradient(160deg, #e8f5e9 0%, #e0f2fe 100%);
+}
+
+.container {
+    max-width: 1024px;
+    margin: 2rem auto;
+    padding: 0 1rem 3rem;
+}
+
+h1 {
+    margin-bottom: 0.5rem;
+}
+
+.subtext {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.flash {
+    background: #ecfccb;
+    border: 1px solid #a3e635;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.error {
+    color: var(--danger);
+    margin-top: 0.75rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+}
+
+label.full {
+    grid-column: 1 / -1;
+}
+
+input, textarea, select, button {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+}
+
+a.btn-secondary {
+    display: inline-block;
+    margin-left: 0.5rem;
+    text-decoration: none;
+    color: var(--text);
+    background: #e5e7eb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
+}
+
+button {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    cursor: pointer;
+}
+
+button.danger {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
