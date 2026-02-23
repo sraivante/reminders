@@ -72,9 +72,13 @@ public class NotificationService {
     }
 
     private String slotKey(ReminderCycle cycle, LocalDateTime now) {
-        if (cycle == ReminderCycle.MINUTELY) {
+        if (cycle == ReminderCycle.MINUTELY || cycle == ReminderCycle.HOURLY) {
             LocalDateTime minuteSlot = now.truncatedTo(ChronoUnit.MINUTES);
             return minuteSlot.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        }
+        if (cycle == ReminderCycle.DAILY) {
+            LocalDateTime hourSlot = now.truncatedTo(ChronoUnit.HOURS);
+            return hourSlot.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH"));
         }
         return now.toLocalDate().toString();
     }

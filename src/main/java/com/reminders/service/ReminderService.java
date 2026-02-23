@@ -52,11 +52,23 @@ public class ReminderService {
         LocalDateTime due = reminder.getReminderDate();
         return switch (reminder.getCycle()) {
             case MINUTELY -> !due.isAfter(now);
+            case HOURLY -> isWithinMinuteWindow(now, due, 10);
+            case DAILY -> isWithinHourWindow(now, due, 5);
             case WEEKLY -> isWithinWindow(now, due, 3);
             case MONTHLY -> isWithinWindow(now, due, 5);
             case YEARLY -> isWithinWindow(now, due, 10);
             case CUSTOM -> isWithinWindow(now, due, 7);
         };
+    }
+
+    private boolean isWithinMinuteWindow(LocalDateTime now, LocalDateTime due, long minutes) {
+        long diff = Math.abs(ChronoUnit.MINUTES.between(now, due));
+        return diff <= minutes;
+    }
+
+    private boolean isWithinHourWindow(LocalDateTime now, LocalDateTime due, long hours) {
+        long diff = Math.abs(ChronoUnit.HOURS.between(now, due));
+        return diff <= hours;
     }
 
     private boolean isWithinWindow(LocalDateTime now, LocalDateTime due, long days) {
@@ -130,6 +142,8 @@ public class ReminderService {
     public LocalDateTime nextDate(LocalDateTime from, ReminderCycle cycle, Integer customDays) {
         return switch (cycle) {
             case MINUTELY -> from.plusMinutes(1);
+            case HOURLY -> from.plusHours(1);
+            case DAILY -> from.plusDays(1);
             case WEEKLY -> from.plusWeeks(1);
             case MONTHLY -> from.plusMonths(1);
             case YEARLY -> from.plusYears(1);
@@ -138,7 +152,7 @@ public class ReminderService {
     }
 
     private LocalDateTime calculateSilenceUntil(LocalDateTime nextDate, ReminderCycle cycle) {
-        if (cycle == ReminderCycle.MINUTELY) {
+        if (cycle == ReminderCycle.MINUTELY || cycle == ReminderCycle.HOURLY || cycle == ReminderCycle.DAILY) {
             return nextDate;
         }
         return nextDate.minusDays(7);
