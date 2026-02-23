@@ -78,4 +78,11 @@ public class ReminderController {
         redirectAttributes.addFlashAttribute("message", "Reminder deleted.");
         return "redirect:/";
     }
+
+    @PostMapping("/reminders/{id}/duplicate")
+    public String duplicate(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        Reminder copy = reminderService.duplicate(id);
+        redirectAttributes.addFlashAttribute("message", "Reminder duplicated as #" + copy.getId() + ".");
+        return "redirect:/";
+    }
 }

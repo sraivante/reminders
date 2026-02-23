@@ -64,6 +64,7 @@
 
     <section class="card">
         <h2>All Reminders</h2>
+        <div id="titleTabs" class="tabs"></div>
         <div class="table-wrap">
         <table>
             <thead>
@@ -79,8 +80,8 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="r : ${reminders}">
-                <td th:text="${r.title}"></td>
+            <tr th:each="r : ${reminders}" class="reminder-row" th:attr="data-title=${r.title}">
+                <td class="reminder-title" th:text="${r.title}"></td>
                 <td th:text="${r.description}"></td>
                 <td th:text="${r.reminderDate}"></td>
                 <td>
@@ -92,6 +93,9 @@
                 <td th:text="${r.active} ? 'ACTIVE' : 'PAUSED'"></td>
                 <td class="actions">
                     <a class="btn-secondary" th:href="@{'/reminders/' + ${r.id} + '/edit'}">Edit</a>
+                    <form th:action="@{'/reminders/' + ${r.id} + '/duplicate'}" method="post">
+                        <button type="submit" class="btn-secondary">Copy</button>
+                    </form>
                     <form th:action="@{'/reminders/' + ${r.id} + '/accept'}" method="post">
                         <button type="submit">Accept</button>
                     </form>
@@ -114,7 +118,49 @@
         const block = document.getElementById('customDaysBlock');
         block.style.display = cycle === 'CUSTOM' ? 'block' : 'none';
     }
+
+    function createTitleTabs() {
+        const tabsHost = document.getElementById('titleTabs');
+        const rows = Array.from(document.querySelectorAll('.reminder-row'));
+        if (!tabsHost || rows.length === 0) {
+            return;
+        }
+
+        const titleSet = new Set();
+        rows.forEach((row) => {
+            const title = (row.getAttribute('data-title') || '').trim();
+            if (title) {
+                titleSet.add(title);
+            }
+        });
+
+        const tabs = [{label: 'All', value: 'ALL'}, ...Array.from(titleSet).map((t) => ({label: t, value: t}))];
+
+        function setActive(filterValue) {
+            rows.forEach((row) => {
+                const title = (row.getAttribute('data-title') || '').trim();
+                row.style.display = (filterValue === 'ALL' || title === filterValue) ? '' : 'none';
+            });
+            Array.from(tabsHost.querySelectorAll('button')).forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.filter === filterValue);
+            });
+        }
+
+        tabs.forEach((tab) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tab-btn';
+            btn.textContent = tab.label;
+            btn.dataset.filter = tab.value;
+            btn.addEventListener('click', () => setActive(tab.value));
+            tabsHost.appendChild(btn);
+        });
+
+        setActive('ALL');
+    }
+
     toggleCustomDays();
+    createTitleTabs();
 </script>
 </body>
 </html>

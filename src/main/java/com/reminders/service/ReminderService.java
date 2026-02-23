@@ -109,6 +109,24 @@ public class ReminderService {
         reminderRepository.deleteById(id);
     }
 
+    @Transactional
+    public Reminder duplicate(Long id) {
+        Reminder source = reminderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
+
+        Reminder copy = new Reminder();
+        copy.setTitle(source.getTitle());
+        copy.setDescription(source.getDescription());
+        copy.setCycle(source.getCycle());
+        copy.setCustomCycleDays(source.getCustomCycleDays());
+        copy.setReminderDate(source.getReminderDate());
+        copy.setEmail(source.getEmail());
+        copy.setWhatsappNumber(source.getWhatsappNumber());
+        copy.setActive(source.isActive());
+        copy.setSilencedUntil(null);
+        return reminderRepository.save(copy);
+    }
+
     public LocalDateTime nextDate(LocalDateTime from, ReminderCycle cycle, Integer customDays) {
         return switch (cycle) {
             case MINUTELY -> from.plusMinutes(1);
