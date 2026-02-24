@@ -2,12 +2,13 @@ package com.reminders.service;
 
 import com.reminders.model.Reminder;
 import java.util.concurrent.atomic.AtomicBoolean;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailAuthenticationException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -44,13 +45,14 @@ public class EmailNotificationSender {
             return false;
         }
         try {
-            SimpleMailMessage mail = new SimpleMailMessage();
-            mail.setTo(recipient);
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mail, false, "UTF-8");
+            helper.setTo(recipient);
             if (StringUtils.hasText(fromEmail)) {
-                mail.setFrom(fromEmail);
+                helper.setFrom(fromEmail);
             }
-            mail.setSubject("Reminder alert: " + reminder.getTitle());
-            mail.setText(messageBody);
+            helper.setSubject("Reminder alert: " + reminder.getTitle());
+            helper.setText(formatAsHtml(messageBody), true);
             mailSender.send(mail);
             authFailureLogged.set(false);
             return true;
@@ -66,5 +68,40 @@ public class EmailNotificationSender {
             log.error("Email send failed for reminder {}", reminder.getId(), ex);
             return false;
         }
+    }
+
+    private String formatAsHtml(String messageBody) {
+        StringBuilder html = new StringBuilder("<div style='font-family:Segoe UI,Arial,sans-serif;'>");
+        html.append("<p><strong style='background:#fff59d;padding:2px 6px;'>REMINDER ALERT</strong></p>");
+
+        for (String line : messageBody.split("\\r?\\n")) {
+            if (!StringUtils.hasText(line)) {
+                continue;
+            }
+            int separator = line.indexOf(':');
+            if (separator > 0 && separator < line.length() - 1) {
+                String label = escapeHtml(line.substring(0, separator).trim());
+                String value = escapeHtml(line.substring(separator + 1).trim());
+                if ("Reminder".equalsIgnoreCase(label) || "Title".equalsIgnoreCase(label)) {
+                    html.append("<p><strong>").append(label).append(":</strong> <mark>")
+                            .append(value).append("</mark></p>");
+                } else {
+                    html.append("<p><strong>").append(label).append(":</strong> ").append(value).append("</p>");
+                }
+            } else {
+                html.append("<p>").append(escapeHtml(line)).append("</p>");
+            }
+        }
+        html.append("</div>");
+        return html.toString();
+    }
+
+    private String escapeHtml(String value) {
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 }

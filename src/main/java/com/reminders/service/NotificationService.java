@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import static com.reminders.RemindersApplication.ANSI_BOLD_YELLOW;
+import static com.reminders.RemindersApplication.ANSI_RESET;
+
 @Service
 public class NotificationService {
 
@@ -45,17 +48,37 @@ public class NotificationService {
         }
         String slotKey = slotKey(reminder.getCycle(), now);
         if (StringUtils.hasText(reminder.getEmail()) && canSend(reminder.getId(), NotificationChannel.EMAIL, slotKey)) {
+            log.info(ANSI_BOLD_YELLOW+"[NOTIFY][EMAIL][START] reminderId={} recipient={} slot={}"+ANSI_RESET,
+                    reminder.getId(), reminder.getEmail(), slotKey);
             boolean sent = emailNotificationSender.send(reminder, messageBody);
             if (sent) {
                 log(reminder.getId(), NotificationChannel.EMAIL, slotKey);
+                log.info(ANSI_BOLD_YELLOW+"[NOTIFY][EMAIL][SUCCESS] reminderId={} recipient={} slot={}"+ANSI_RESET,
+                        reminder.getId(), reminder.getEmail(), slotKey);
+            } else {
+                log.warn("[NOTIFY][EMAIL][FAILED] reminderId={} recipient={} slot={}",
+                        reminder.getId(), reminder.getEmail(), slotKey);
             }
+        } else if (StringUtils.hasText(reminder.getEmail())) {
+            log.info("[NOTIFY][EMAIL][SKIPPED] reminderId={} recipient={} slot={} reason=already-sent",
+                    reminder.getId(), reminder.getEmail(), slotKey);
         }
 
         if (StringUtils.hasText(reminder.getWhatsappNumber()) && canSend(reminder.getId(), NotificationChannel.WHATSAPP, slotKey)) {
+            log.info("[NOTIFY][WHATSAPP][START] reminderId={} recipient={} slot={}",
+                    reminder.getId(), reminder.getWhatsappNumber(), slotKey);
             boolean sent = whatsAppNotificationSender.send(reminder, messageBody);
             if (sent) {
                 log(reminder.getId(), NotificationChannel.WHATSAPP, slotKey);
+                log.info("[NOTIFY][WHATSAPP][SUCCESS] reminderId={} recipient={} slot={}",
+                        reminder.getId(), reminder.getWhatsappNumber(), slotKey);
+            } else {
+                log.warn("[NOTIFY][WHATSAPP][FAILED] reminderId={} recipient={} slot={}",
+                        reminder.getId(), reminder.getWhatsappNumber(), slotKey);
             }
+        } else if (StringUtils.hasText(reminder.getWhatsappNumber())) {
+            log.info("[NOTIFY][WHATSAPP][SKIPPED] reminderId={} recipient={} slot={} reason=already-sent",
+                    reminder.getId(), reminder.getWhatsappNumber(), slotKey);
         }
     }
 

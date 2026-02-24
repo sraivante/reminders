@@ -50,7 +50,7 @@ public class WhatsAppNotificationSender {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("From", "whatsapp:" + fromWhatsapp);
         body.add("To", "whatsapp:" + recipient);
-        body.add("Body", messageBody);
+        body.add("Body", formatForWhatsApp(messageBody));
 
         try {
             restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
@@ -59,5 +59,27 @@ public class WhatsAppNotificationSender {
             log.error("WhatsApp send failed for reminder {}", reminder.getId(), ex);
             return false;
         }
+    }
+
+    private String formatForWhatsApp(String messageBody) {
+        StringBuilder formatted = new StringBuilder("*REMINDER ALERT*\n");
+        for (String line : messageBody.split("\\r?\\n")) {
+            if (!StringUtils.hasText(line)) {
+                continue;
+            }
+            int separator = line.indexOf(':');
+            if (separator > 0 && separator < line.length() - 1) {
+                String label = line.substring(0, separator).trim();
+                String value = line.substring(separator + 1).trim();
+                if ("Reminder".equalsIgnoreCase(label) || "Title".equalsIgnoreCase(label)) {
+                    formatted.append("*").append(label).append(":* ").append("*").append(value).append("*\n");
+                } else {
+                    formatted.append("*").append(label).append(":* ").append(value).append("\n");
+                }
+            } else {
+                formatted.append(line).append("\n");
+            }
+        }
+        return formatted.toString().trim();
     }
 }
