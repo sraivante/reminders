@@ -8,6 +8,8 @@ services:
       MYSQL_USER: root1
       MYSQL_PASSWORD: Dzee2015$
       MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Kolkata
+
     ports:
       - "3307:3306"
     volumes:
@@ -29,13 +31,14 @@ services:
       db:
         condition: service_healthy
     environment:
-      DB_URL: jdbc:mysql://reminders-db:3306/reminders?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_URL: jdbc:mysql://reminders-db:3306/reminders?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
       DB_USERNAME: root1
       DB_PASSWORD: Dzee2015$
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-sr.aivante@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-izcvacevlkylvwyn}
+      MAIL_FROM: ${MAIL_FROM:-sr.aivante@gmail.com}
       MAIL_SSL_TRUST: ${MAIL_SSL_TRUST:-smtp.gmail.com}
       WHATSAPP_FROM: ${WHATSAPP_FROM:-+919953035570}
+      TZ: Asia/Kolkata
     ports:
       - "8081:8080"
