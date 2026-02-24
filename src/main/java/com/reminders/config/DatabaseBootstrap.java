@@ -3,6 +3,7 @@ package com.reminders.config;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -10,14 +11,23 @@ import org.springframework.stereotype.Component;
 public class DatabaseBootstrap {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseBootstrap.class);
+    private static final String ANSI_BOLD_CYAN = "\u001B[1;36m";
+    private static final String ANSI_RESET = "\u001B[0m";
     private final JdbcTemplate jdbcTemplate;
+    private final String datasourceUrl;
 
-    public DatabaseBootstrap(JdbcTemplate jdbcTemplate) {
+    public DatabaseBootstrap(
+            JdbcTemplate jdbcTemplate,
+            @Value("${spring.datasource.url}") String datasourceUrl
+    ) {
         this.jdbcTemplate = jdbcTemplate;
+        this.datasourceUrl = datasourceUrl;
     }
 
     @PostConstruct
     public void ensureTables() {
+        log.info("{}Configured DB URL: {}{}", ANSI_BOLD_CYAN, datasourceUrl, ANSI_RESET);
+
         jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS reminder (
                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
