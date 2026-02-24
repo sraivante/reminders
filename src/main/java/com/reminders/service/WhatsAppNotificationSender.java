@@ -3,6 +3,9 @@ package com.reminders.service;
 import com.reminders.model.Reminder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,44 +24,58 @@ public class WhatsAppNotificationSender {
     private static final Logger log = LoggerFactory.getLogger(WhatsAppNotificationSender.class);
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${app.whatsapp.twilio.account-sid:}")
+    @Value("${app.whatsapp.twilio.account-sid:1234}")
     private String accountSid;
 
-    @Value("${app.whatsapp.twilio.auth-token:}")
+    @Value("${app.whatsapp.twilio.auth-token:EAAnb3q49HIUBQ6NTZBY0rRjyC5rhA7KhAL756WDZAdIZAnstrFgfpATF9ZAiRSkduEsSLAbaU1XrkMCPBgczSuvLlvGbIlP2ZAEZBcApNtGVUsMco2yPTDaBcoyZBbRleodMJn06qGdoL2AmxVeRrFyg4ohUH1xULZC9yWAHoQ5J8lQpgRrELWt9by7uU8iOniSActxdrS5MiiCUNVJzJ3zxExioFQdPchCpo2JUVPdPW40a68hDIVie46FZBok0X5rsPfOM2ZB2NlrydRPAIb6t7vqAZDZD}")
     private String authToken;
 
-    @Value("${app.whatsapp.twilio.from:}")
+    @Value("${app.whatsapp.twilio.from:1025774503953615}")
     private String fromWhatsapp;
 
     public boolean send(Reminder reminder, String messageBody) {
+
         String recipient = reminder.getWhatsappNumber();
-        if (!StringUtils.hasText(recipient)
-                || !StringUtils.hasText(accountSid)
-                || !StringUtils.hasText(authToken)
-                || !StringUtils.hasText(fromWhatsapp)) {
+
+        if (!StringUtils.hasText(recipient)) {
             return false;
         }
 
-        String url = "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages.json";
-        String authValue = Base64.getEncoder()
-                .encodeToString((accountSid + ":" + authToken).getBytes(StandardCharsets.UTF_8));
+        String url = "https://graph.facebook.com/v22.0/" + fromWhatsapp + "/messages";
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("Authorization", "Basic " + authValue);
+        headers.setBearerAuth(authToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("From", "whatsapp:" + fromWhatsapp);
-        body.add("To", "whatsapp:" + recipient);
-        body.add("Body", formatForWhatsApp(messageBody));
+        // IMPORTANT: Use Map instead of String JSON
+        Map<String, Object> body = new HashMap<>();
+        body.put("messaging_product", "whatsapp");
+        body.put("to", normalizeNumber(recipient));
+        body.put("type", "text");
+
+        Map<String, String> text = new HashMap<>();
+        text.put("body", formatForWhatsApp(messageBody));
+
+        body.put("text", text);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
-            restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
+            restTemplate.postForObject(url, request, String.class);
             return true;
         } catch (Exception ex) {
             log.error("WhatsApp send failed for reminder {}", reminder.getId(), ex);
             return false;
         }
+    }
+
+    private String normalizeNumber(String number) {
+        number = number.replaceAll("\\D", "");
+
+        if (number.startsWith("91")) {
+            return number;
+        }
+        return "91" + number;
     }
 
     private String formatForWhatsApp(String messageBody) {
