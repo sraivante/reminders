@@ -5,14 +5,14 @@ import com.reminders.model.Reminder;
 import com.reminders.model.ReminderCycle;
 import com.reminders.repository.NotificationLogRepository;
 import com.reminders.repository.ReminderRepository;
-import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ReminderService {
@@ -25,13 +25,12 @@ public class ReminderService {
         this.notificationLogRepository = notificationLogRepository;
     }
 
-    public List<Reminder> findAll() {
-        return reminderRepository.findAll(Sort.by(Sort.Direction.ASC, "reminderDate"));
+    public List<Reminder> findAllForOwner(String ownerEmail) {
+        return reminderRepository.findAllByOwnerEmailOrderByReminderDateAsc(ownerEmail);
     }
 
-    public ReminderForm findFormById(Long id) {
-        Reminder reminder = reminderRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
+    public ReminderForm findFormByIdForOwner(Long id, String ownerEmail) {
+        Reminder reminder = findByIdForOwner(id, ownerEmail);
         ReminderForm form = new ReminderForm();
         form.setId(reminder.getId());
         form.setTitle(reminder.getTitle());
@@ -77,10 +76,10 @@ public class ReminderService {
     }
 
     @Transactional
-    public Reminder save(ReminderForm form) {
+    public Reminder save(ReminderForm form, String ownerEmail) {
         Reminder reminder = form.getId() == null
                 ? new Reminder()
-                : reminderRepository.findById(form.getId()).orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
+                : findByIdForOwner(form.getId(), ownerEmail);
 
         reminder.setTitle(form.getTitle().trim());
         reminder.setDescription(form.getDescription().trim());
@@ -89,6 +88,7 @@ public class ReminderService {
         reminder.setReminderDate(form.getReminderDate());
         reminder.setEmail(StringUtils.hasText(form.getEmail()) ? form.getEmail().trim() : null);
         reminder.setWhatsappNumber(StringUtils.hasText(form.getWhatsappNumber()) ? form.getWhatsappNumber().trim() : null);
+        reminder.setOwnerEmail(ownerEmail);
         if (reminder.getId() == null) {
             reminder.setSilencedUntil(null);
             reminder.setActive(true);
@@ -97,9 +97,8 @@ public class ReminderService {
     }
 
     @Transactional
-    public void acceptAndMoveToNextPeriod(Long id) {
-        Reminder reminder = reminderRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
+    public void acceptAndMoveToNextPeriod(Long id, String ownerEmail) {
+        Reminder reminder = findByIdForOwner(id, ownerEmail);
 
         LocalDateTime nextDate = nextDate(reminder.getReminderDate(), reminder.getCycle(), reminder.getCustomCycleDays());
         reminder.setReminderDate(nextDate);
@@ -108,23 +107,22 @@ public class ReminderService {
     }
 
     @Transactional
-    public void toggleActive(Long id) {
-        Reminder reminder = reminderRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
+    public void toggleActive(Long id, String ownerEmail) {
+        Reminder reminder = findByIdForOwner(id, ownerEmail);
         reminder.setActive(!reminder.isActive());
         reminderRepository.save(reminder);
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, String ownerEmail) {
+        findByIdForOwner(id, ownerEmail);
         notificationLogRepository.deleteByReminderId(id);
         reminderRepository.deleteById(id);
     }
 
     @Transactional
-    public Reminder duplicate(Long id) {
-        Reminder source = reminderRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
+    public Reminder duplicate(Long id, String ownerEmail) {
+        Reminder source = findByIdForOwner(id, ownerEmail);
 
         Reminder copy = new Reminder();
         copy.setTitle(source.getTitle());
@@ -134,9 +132,15 @@ public class ReminderService {
         copy.setReminderDate(source.getReminderDate());
         copy.setEmail(source.getEmail());
         copy.setWhatsappNumber(source.getWhatsappNumber());
+        copy.setOwnerEmail(source.getOwnerEmail());
         copy.setActive(source.isActive());
         copy.setSilencedUntil(null);
         return reminderRepository.save(copy);
+    }
+
+    private Reminder findByIdForOwner(Long id, String ownerEmail) {
+        return reminderRepository.findByIdAndOwnerEmail(id, ownerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reminder not found"));
     }
 
     public LocalDateTime nextDate(LocalDateTime from, ReminderCycle cycle, Integer customDays) {

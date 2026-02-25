@@ -1,9 +1,11 @@
 package com.reminders.controller;
 
+import com.reminders.config.SessionKeys;
 import com.reminders.dto.ReminderForm;
 import com.reminders.model.Reminder;
 import com.reminders.model.ReminderCycle;
 import com.reminders.service.ReminderService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
@@ -26,9 +28,11 @@ public class ReminderController {
     }
 
     @GetMapping("/")
-    public String home(Model model) {
-        List<Reminder> reminders = reminderService.findAll();
+    public String home(Model model, HttpSession session) {
+        String userEmail = userEmail(session);
+        List<Reminder> reminders = reminderService.findAllForOwner(userEmail);
         model.addAttribute("reminders", reminders);
+        model.addAttribute("loggedInEmail", userEmail);
         if (!model.containsAttribute("reminderForm")) {
             model.addAttribute("reminderForm", new ReminderForm());
         }
@@ -37,10 +41,10 @@ public class ReminderController {
     }
 
     @GetMapping("/reminders/{id}/edit")
-    public String edit(@PathVariable Long id, Model model) {
-        model.addAttribute("reminderForm", reminderService.findFormById(id));
+    public String edit(@PathVariable Long id, Model model, HttpSession session) {
+        model.addAttribute("reminderForm", reminderService.findFormByIdForOwner(id, userEmail(session)));
         model.addAttribute("message", "Editing reminder #" + id);
-        return home(model);
+        return home(model, session);
     }
 
     @PostMapping("/reminders")
@@ -48,41 +52,50 @@ public class ReminderController {
             @Valid @ModelAttribute("reminderForm") ReminderForm form,
             BindingResult bindingResult,
             Model model,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            HttpSession session
     ) {
         if (bindingResult.hasErrors()) {
-            return home(model);
+            return home(model, session);
         }
-        reminderService.save(form);
+        reminderService.save(form, userEmail(session));
         redirectAttributes.addFlashAttribute("message", "Reminder saved.");
         return "redirect:/";
     }
 
     @PostMapping("/reminders/{id}/accept")
-    public String accept(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        reminderService.acceptAndMoveToNextPeriod(id);
+    public String accept(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
+        reminderService.acceptAndMoveToNextPeriod(id, userEmail(session));
         redirectAttributes.addFlashAttribute("message", "Reminder accepted and moved to next period.");
         return "redirect:/";
     }
 
     @PostMapping("/reminders/{id}/toggle-active")
-    public String toggleActive(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        reminderService.toggleActive(id);
+    public String toggleActive(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
+        reminderService.toggleActive(id, userEmail(session));
         redirectAttributes.addFlashAttribute("message", "Reminder status updated.");
         return "redirect:/";
     }
 
     @PostMapping("/reminders/{id}/delete")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        reminderService.delete(id);
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
+        reminderService.delete(id, userEmail(session));
         redirectAttributes.addFlashAttribute("message", "Reminder deleted.");
         return "redirect:/";
     }
 
     @PostMapping("/reminders/{id}/duplicate")
-    public String duplicate(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        Reminder copy = reminderService.duplicate(id);
+    public String duplicate(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
+        Reminder copy = reminderService.duplicate(id, userEmail(session));
         redirectAttributes.addFlashAttribute("message", "Reminder duplicated as #" + copy.getId() + ".");
         return "redirect:/";
+    }
+
+    private String userEmail(HttpSession session) {
+        Object value = session.getAttribute(SessionKeys.USER_EMAIL);
+        if (value == null) {
+            throw new IllegalStateException("Missing authenticated user session.");
+        }
+        return value.toString();
     }
 }

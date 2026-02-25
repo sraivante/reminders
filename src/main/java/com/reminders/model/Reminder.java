@@ -39,6 +39,9 @@ public class Reminder {
     @Column(length = 120)
     private String email;
 
+    @Column(name = "owner_email", nullable = false, length = 120)
+    private String ownerEmail;
+
     @Column(name = "whatsapp_number", length = 30)
     private String whatsappNumber;
 
@@ -128,6 +131,14 @@ public class Reminder {
 
     public void setWhatsappNumber(String whatsappNumber) {
         this.whatsappNumber = whatsappNumber;
+    }
+
+    public String getOwnerEmail() {
+        return ownerEmail;
+    }
+
+    public void setOwnerEmail(String ownerEmail) {
+        this.ownerEmail = ownerEmail;
     }
 
     public boolean isActive() {

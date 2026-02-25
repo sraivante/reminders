@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Reminders</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="auth-container">
+    <section class="card auth-card">
+        <h1>Login</h1>
+        <p class="subtext">Use your email and password to access your reminders.</p>
+        <div class="flash" th:if="${message}" th:text="${message}"></div>
+        <p class="error" th:if="${error}" th:text="${error}"></p>
+        <form th:action="@{/login}" method="post" th:object="${loginForm}">
+            <label>
+                Email
+                <input type="email" th:field="*{email}" placeholder="you@example.com" required>
+                <small class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+            </label>
+            <label>
+                Password
+                <input type="password" th:field="*{password}" placeholder="Minimum 8 characters" required>
+                <small class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></small>
+            </label>
+            <button type="submit">Login</button>
+        </form>
+        <p class="auth-switch">No account? <a th:href="@{/signup}">Create one</a></p>
+    </section>
+</main>
+</body>
+</html>

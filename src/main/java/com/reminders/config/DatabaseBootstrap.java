@@ -29,6 +29,14 @@ public class DatabaseBootstrap {
         log.info("{}Configured DB URL: {}{}", ANSI_BOLD_CYAN, datasourceUrl, ANSI_RESET);
 
         jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS app_user (
+                    email VARCHAR(120) PRIMARY KEY,
+                    password_hash VARCHAR(100) NOT NULL,
+                    created_at DATETIME NOT NULL
+                )
+                """);
+
+        jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS reminder (
                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
                     title VARCHAR(120) NOT NULL,
@@ -37,6 +45,7 @@ public class DatabaseBootstrap {
                     custom_cycle_days INT NULL,
                     reminder_date DATETIME NOT NULL,
                     email VARCHAR(120) NULL,
+                    owner_email VARCHAR(120) NOT NULL,
                     whatsapp_number VARCHAR(30) NULL,
                     active BIT NOT NULL DEFAULT b'1',
                     silenced_until DATETIME NULL,
@@ -46,32 +55,15 @@ public class DatabaseBootstrap {
                 """);
 
         jdbcTemplate.execute("""
-                ALTER TABLE reminder
-                MODIFY COLUMN reminder_date DATETIME NOT NULL
-                """);
-
-        jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS notification_log (
                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
                     reminder_id BIGINT NOT NULL,
                     channel VARCHAR(20) NOT NULL,
-                    sent_on DATE NULL,
-                    slot_key VARCHAR(30) NULL,
+                    slot_key VARCHAR(30) NOT NULL,
                     sent_at DATETIME NOT NULL,
                     CONSTRAINT uk_notification_slot UNIQUE (reminder_id, channel, slot_key),
                     CONSTRAINT fk_notification_reminder FOREIGN KEY (reminder_id) REFERENCES reminder (id)
                 )
                 """);
-
-        trySql("ALTER TABLE notification_log ADD COLUMN slot_key VARCHAR(30) NULL");
-        trySql("CREATE UNIQUE INDEX uk_notification_slot ON notification_log (reminder_id, channel, slot_key)");
-    }
-
-    private void trySql(String sql) {
-        try {
-            jdbcTemplate.execute(sql);
-        } catch (Exception ex) {
-            log.debug("Skipping SQL migration [{}]: {}", sql, ex.getMessage());
-        }
     }
 }

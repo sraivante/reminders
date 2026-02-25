@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Reminders</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="auth-container">
+    <section class="card auth-card">
+        <h1>Create Account</h1>
+        <p class="subtext">Sign up with your email to keep reminders private to your account.</p>
+        <p class="error" th:if="${error}" th:text="${error}"></p>
+        <form th:action="@{/signup}" method="post" th:object="${signupForm}">
+            <label>
+                Email
+                <input type="email" th:field="*{email}" placeholder="you@example.com" required>
+                <small class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+            </label>
+            <label>
+                Password
+                <input type="password" th:field="*{password}" placeholder="Minimum 8 characters" required>
+                <small class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></small>
+            </label>
+            <label>
+                Confirm Password
+                <input type="password" th:field="*{confirmPassword}" placeholder="Re-enter password" required>
+                <small class="error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></small>
+            </label>
+            <small class="error" th:if="${#fields.hasErrors('passwordMatch')}" th:errors="*{passwordMatch}"></small>
+            <button type="submit">Create Account</button>
+        </form>
+        <p class="auth-switch">Already have an account? <a th:href="@{/login}">Login</a></p>
+    </section>
+</main>
+</body>
+</html>

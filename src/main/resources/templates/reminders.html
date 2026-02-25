@@ -8,6 +8,12 @@
 </head>
 <body>
 <main class="container">
+    <div class="topbar">
+        <p class="subtext">Logged in as <strong th:text="${loggedInEmail}"></strong></p>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn-secondary">Logout</button>
+        </form>
+    </div>
     <h1>Reminder Center</h1>
     <p class="subtext">MINUTELY: from due time. HOURLY: +/-10 minutes (checked every minute). DAILY: +/-5 hours (sent hourly). Weekly/Monthly/Yearly/Custom use day windows.</p>
 
@@ -63,7 +69,7 @@
     </section>
 
     <section class="card">
-        <h2>All Reminders</h2>
+        <h2>Your Reminders</h2>
         <div id="titleTabs" class="tabs"></div>
         <div class="table-wrap">
         <table>
