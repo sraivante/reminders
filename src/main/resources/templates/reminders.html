@@ -27,7 +27,20 @@
             <div class="grid">
                 <label>
                     Reminder Title
-                    <input type="text" th:field="*{title}" placeholder="Insurance renewal" required>
+                    <select id="titleSelector" onchange="toggleTitleInput()">
+                        <option value="__new__"
+                                th:selected="${#strings.isEmpty(reminderForm.title) or !#lists.contains(existingTitles, reminderForm.title)}">
+                            Create New Title
+                        </option>
+                        <option th:each="existingTitle : ${existingTitles}"
+                                th:value="${existingTitle}"
+                                th:text="${existingTitle}"
+                                th:selected="${reminderForm.title == existingTitle}">
+                        </option>
+                    </select>
+                    <div id="titleInputBlock">
+                        <input type="text" id="titleInput" th:field="*{title}" placeholder="Insurance renewal" required>
+                    </div>
                     <small class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></small>
                 </label>
                 <label>
@@ -119,6 +132,27 @@
     </section>
 </main>
 <script>
+    function toggleTitleInput() {
+        const selector = document.getElementById('titleSelector');
+        const inputBlock = document.getElementById('titleInputBlock');
+        const input = document.getElementById('titleInput');
+        if (!selector || !inputBlock || !input) {
+            return;
+        }
+
+        if (selector.value === '__new__') {
+            inputBlock.style.display = 'block';
+            input.required = true;
+            input.readOnly = false;
+            return;
+        }
+
+        input.value = selector.value;
+        input.required = false;
+        input.readOnly = true;
+        inputBlock.style.display = 'none';
+    }
+
     function toggleCustomDays() {
         const cycle = document.getElementById('cycle').value;
         const block = document.getElementById('customDaysBlock');
@@ -165,6 +199,7 @@
         setActive('ALL');
     }
 
+    toggleTitleInput();
     toggleCustomDays();
     createTitleTabs();
 </script>

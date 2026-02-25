@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,7 +32,14 @@ public class ReminderController {
     public String home(Model model, HttpSession session) {
         String userEmail = userEmail(session);
         List<Reminder> reminders = reminderService.findAllForOwner(userEmail);
+        List<String> existingTitles = reminders.stream()
+                .map(Reminder::getTitle)
+                .filter(title -> title != null && !title.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
         model.addAttribute("reminders", reminders);
+        model.addAttribute("existingTitles", existingTitles);
         model.addAttribute("loggedInEmail", userEmail);
         if (!model.containsAttribute("reminderForm")) {
             model.addAttribute("reminderForm", new ReminderForm());
