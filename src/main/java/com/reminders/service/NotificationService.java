@@ -46,7 +46,7 @@ public class NotificationService {
         if (!reminderRepository.existsById(reminder.getId())) {
             return;
         }
-        String slotKey = slotKey(reminder.getCycle(), now);
+        String slotKey = slotKey(reminder, now);
         if (StringUtils.hasText(reminder.getEmail()) && canSend(reminder.getId(), NotificationChannel.EMAIL, slotKey)) {
             log.info(ANSI_BOLD_YELLOW+"[NOTIFY][EMAIL][START] reminderId={} recipient={} slot={}"+ANSI_RESET,
                     reminder.getId(), reminder.getEmail(), slotKey);
@@ -94,12 +94,29 @@ public class NotificationService {
         }
     }
 
-    private String slotKey(ReminderCycle cycle, LocalDateTime now) {
-        if (cycle == ReminderCycle.MINUTELY || cycle == ReminderCycle.HOURLY) {
+    private String slotKey(Reminder reminder, LocalDateTime now) {
+        ReminderCycle cycle = reminder.getCycle();
+        if (cycle == ReminderCycle.YEARLY
+                || cycle == ReminderCycle.WEEKLY
+                || cycle == ReminderCycle.DAILY
+                || cycle == ReminderCycle.HOURLY) {
+            return proximitySlotKey(reminder, now);
+        }
+
+        if (cycle == ReminderCycle.MINUTELY) {
             LocalDateTime minuteSlot = now.truncatedTo(ChronoUnit.MINUTES);
             return minuteSlot.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
         }
-        if (cycle == ReminderCycle.DAILY) {
+        return now.toLocalDate().toString();
+    }
+
+    private String proximitySlotKey(Reminder reminder, LocalDateTime now) {
+        long minuteDiff = Math.abs(ChronoUnit.MINUTES.between(now, reminder.getReminderDate()));
+        if (minuteDiff <= 60) {
+            LocalDateTime minuteSlot = now.truncatedTo(ChronoUnit.MINUTES);
+            return minuteSlot.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        }
+        if (minuteDiff <= 24 * 60) {
             LocalDateTime hourSlot = now.truncatedTo(ChronoUnit.HOURS);
             return hourSlot.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH"));
         }
