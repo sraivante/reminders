@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Code Commands</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0F1117; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1A1D2B; }
+    ::-webkit-scrollbar-thumb { background: #3B3F54; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4B5069; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const commands = [
+      { cmd: "/add-dir", desc: "Add a new working directory to your current Claude Code session so it can access files across multiple project folders.", example: '/add-dir ../shared-lib', category: "Project" },
+      { cmd: "/agents", desc: "Manage agent configurations \u2014 create, edit, list, or remove custom agent profiles that define behavior and tool access.", example: "/agents list", category: "Config" },
+      { cmd: "/chrome", desc: "Configure Claude in Chrome (Beta) settings, enabling browser-based interactions and web automation.", example: "/chrome enable", category: "Integration" },
+      { cmd: "/clear", desc: "Clear the entire conversation history and free up context window space for a fresh start.", example: "/clear", category: "Session" },
+      { cmd: "/compact", desc: "Clear conversation history but retain a compressed summary. Optionally pass instructions to guide the summarization.", example: '/compact keep all code changes', category: "Session" },
+      { cmd: "/config", desc: "Open the interactive configuration panel to adjust Claude Code settings like model, permissions, and preferences.", example: "/config", category: "Config" },
+      { cmd: "/context", desc: "Visualize the current context window usage as a colored grid, showing how much capacity remains.", example: "/context", category: "Session" },
+      { cmd: "/copy", desc: "Copy Claude's last response or a specific code block to the system clipboard for easy pasting.", example: "/copy 2  (copies 2nd code block)", category: "Utility" },
+      { cmd: "/desktop", desc: "Continue the current terminal session seamlessly in the Claude Desktop application.", example: "/desktop", category: "Integration" },
+      { cmd: "/diff", desc: "View uncommitted git changes and per-turn diffs to track what Claude modified in each step.", example: "/diff", category: "Git" },
+      { cmd: "/doctor", desc: "Run diagnostics to verify your Claude Code installation, dependencies, and settings are correctly configured.", example: "/doctor", category: "Utility" },
+      { cmd: "/exit", desc: "Exit the Claude Code REPL and return to your normal terminal shell.", example: "/exit", category: "Session" },
+      { cmd: "/export", desc: "Export the current conversation to a file (JSON/Markdown) or copy it to the clipboard.", example: "/export chat.md", category: "Utility" },
+      { cmd: "/extra-usage", desc: "Configure extra usage allowance so Claude keeps working even when your plan's rate limits are hit.", example: "/extra-usage enable", category: "Config" },
+      { cmd: "/fast", desc: "Toggle fast mode which uses a quicker model for simple tasks. Available only on Opus 4.6.", example: "/fast", category: "Config" },
+      { cmd: "/feedback", desc: "Submit feedback, bug reports, or feature requests about Claude Code directly to the Anthropic team.", example: "/feedback", category: "Utility" },
+      { cmd: "/fork", desc: "Create a fork (branch) of the current conversation at this point, allowing you to explore alternate paths.", example: "/fork", category: "Session" },
+      { cmd: "/help", desc: "Show the help menu with all available commands and their brief descriptions.", example: "/help", category: "Utility" },
+      { cmd: "/hooks", desc: "Manage hook configurations that trigger custom scripts or actions on specific tool events (pre/post execution).", example: "/hooks list", category: "Config" },
+      { cmd: "/ide", desc: "Manage IDE integrations (VS Code, JetBrains, etc.) and show the current connection status.", example: "/ide status", category: "Integration" },
+      { cmd: "/install-github-app", desc: "Set up the Claude GitHub Actions app for a repository to enable CI/CD-integrated code reviews and automation.", example: "/install-github-app myorg/myrepo", category: "Integration" },
+      { cmd: "/install-slack-app", desc: "Install the Claude Slack app into your workspace for team collaboration and messaging integration.", example: "/install-slack-app", category: "Integration" },
+      { cmd: "/keybindings", desc: "Open or create your keybindings configuration file to customize keyboard shortcuts in Claude Code.", example: "/keybindings", category: "Config" },
+      { cmd: "/login", desc: "Sign in with your Anthropic account to authenticate and access your plan's features.", example: "/login", category: "Auth" },
+      { cmd: "/logout", desc: "Sign out from your Anthropic account in the current Claude Code session.", example: "/logout", category: "Auth" },
+      { cmd: "/mcp", desc: "Manage Model Context Protocol (MCP) servers \u2014 add, remove, or configure external tool integrations.", example: "/mcp add my-server", category: "Integration" },
+      { cmd: "/memory", desc: "Edit Claude's memory files (CLAUDE.md) to persist project context, conventions, and preferences across sessions.", example: "/memory", category: "Config" },
+      { cmd: "/mobile", desc: "Display a QR code to quickly download the Claude mobile app on your phone.", example: "/mobile", category: "Utility" },
+      { cmd: "/model", desc: "Set or switch the AI model used by Claude Code (e.g., Opus 4.6, Sonnet 4.6).", example: "/model sonnet", category: "Config" },
+      { cmd: "/output-style", desc: "Set the output formatting style \u2014 choose from presets or configure custom display preferences.", example: "/output-style minimal", category: "Config" },
+      { cmd: "/permissions", desc: "Manage allow and deny rules for tool permissions, controlling what actions Claude can take automatically.", example: "/permissions allow bash(git *)", category: "Config" },
+      { cmd: "/plan", desc: "Enable plan mode where Claude outlines a strategy before executing, or view the current session's plan.", example: "/plan", category: "Session" },
+      { cmd: "/plugin", desc: "Manage Claude Code plugins \u2014 install, remove, or list third-party extensions that add functionality.", example: "/plugin list", category: "Config" },
+      { cmd: "/privacy-settings", desc: "View and update your privacy settings, including telemetry and data sharing preferences.", example: "/privacy-settings", category: "Config" },
+      { cmd: "/release-notes", desc: "View the release notes for your current Claude Code version to see what's new or changed.", example: "/release-notes", category: "Utility" },
+      { cmd: "/reload-plugins", desc: "Activate any pending plugin changes in the current session without restarting Claude Code.", example: "/reload-plugins", category: "Config" },
+      { cmd: "/remote-control", desc: "Connect this terminal for remote-control sessions, allowing another device to send commands.", example: "/remote-control", category: "Integration" },
+      { cmd: "/remote-env", desc: "Configure the default remote environment for teleport sessions (e.g., SSH into a cloud machine).", example: "/remote-env set my-server", category: "Integration" },
+      { cmd: "/rename", desc: "Rename the current conversation to something descriptive for easier retrieval later.", example: '/rename "Auth bug fix session"', category: "Session" },
+      { cmd: "/resume", desc: "Resume a previous conversation by selecting from your saved session history.", example: "/resume", category: "Session" },
+      { cmd: "/rewind", desc: "Restore the code and/or conversation to a previous checkpoint, undoing recent changes.", example: "/rewind 3  (rewind 3 turns)", category: "Session" },
+      { cmd: "/skills", desc: "List all available skills (bundled and custom) that extend Claude Code's capabilities.", example: "/skills", category: "Utility" },
+      { cmd: "/stats", desc: "Show your Claude Code usage statistics including tokens used, sessions, and activity breakdown.", example: "/stats", category: "Utility" },
+      { cmd: "/status", desc: "Show full status \u2014 version, model, account info, API connectivity, and tool availability.", example: "/status", category: "Utility" },
+      { cmd: "/stickers", desc: "Order physical Claude Code stickers shipped to your address \u2014 a fun perk for users.", example: "/stickers", category: "Utility" },
+      { cmd: "/tasks", desc: "List and manage background tasks that are running in parallel (e.g., batch agents).", example: "/tasks list", category: "Session" },
+      { cmd: "/terminal-setup", desc: "Install the Shift+Enter key binding so you can enter newlines in the Claude Code input without submitting.", example: "/terminal-setup", category: "Config" },
+      { cmd: "/theme", desc: "Change the visual theme of the Claude Code terminal interface (dark, light, custom, etc.).", example: "/theme dark", category: "Config" },
+      { cmd: "/upgrade", desc: "Upgrade to the Max plan for higher rate limits and more access to the Opus model.", example: "/upgrade", category: "Auth" },
+      { cmd: "/usage", desc: "Show your current plan's usage limits \u2014 how many requests remain and when they reset.", example: "/usage", category: "Utility" },
+      { cmd: "/vim", desc: "Toggle between Vim keybindings and normal editing mode in the Claude Code input area.", example: "/vim", category: "Config" },
+      { cmd: "/batch", desc: "Research and plan a large-scale change, then execute it in parallel across 5\u201330 isolated worktree agents that each open a PR.", example: '/batch "migrate all tests to vitest"', category: "Workflow" },
+      { cmd: "/claude-api", desc: "Build apps with the Claude API or Anthropic SDK. Triggers when code imports anthropic or user asks to use Claude programmatically.", example: "/claude-api", category: "Workflow" },
+      { cmd: "/debug", desc: "Enable debug logging for the current session to help diagnose issues with tools, network, or configuration.", example: "/debug", category: "Utility" },
+      { cmd: "/init", desc: "Initialize a new CLAUDE.md file with auto-generated codebase documentation, conventions, and context for Claude.", example: "/init", category: "Project" },
+      { cmd: "/insights", desc: "Generate an analytical report of your Claude Code sessions \u2014 patterns, productivity metrics, and usage trends.", example: "/insights", category: "Utility" },
+      { cmd: "/loop", desc: "Run a prompt or slash command on a recurring interval. Defaults to every 10 minutes if no interval is specified.", example: "/loop 5m /status", category: "Workflow" },
+      { cmd: "/pr-comments", desc: "Fetch and display comments from a GitHub pull request so Claude can address review feedback.", example: "/pr-comments 42", category: "Git" },
+      { cmd: "/review", desc: "Perform a thorough code review of a pull request, analyzing changes for bugs, style, and best practices.", example: "/review 42", category: "Git" },
+      { cmd: "/security-review", desc: "Run a comprehensive security review of all pending (uncommitted) changes on the current branch.", example: "/security-review", category: "Git" },
+    ];
+
+    const categoryColors = {
+      Session:     { bg: "#FFF7ED", border: "#FB923C", text: "#9A3412" },
+      Config:      { bg: "#EFF6FF", border: "#60A5FA", text: "#1E40AF" },
+      Integration: { bg: "#F0FDF4", border: "#4ADE80", text: "#166534" },
+      Utility:     { bg: "#FAF5FF", border: "#C084FC", text: "#6B21A8" },
+      Git:         { bg: "#FFF1F2", border: "#FB7185", text: "#9F1239" },
+      Auth:        { bg: "#FEFCE8", border: "#FACC15", text: "#854D0E" },
+      Workflow:    { bg: "#F0FDFA", border: "#2DD4BF", text: "#115E59" },
+      Project:     { bg: "#FDF2F8", border: "#F472B6", text: "#9D174D" },
+    };
+
+    const categories = Object.keys(categoryColors);
+
+    function CommandTable() {
+      const [search, setSearch] = useState("");
+      const [activeCategory, setActiveCategory] = useState("All");
+
+      const filtered = commands.filter((c) => {
+        const matchesSearch =
+          !search ||
+          c.cmd.toLowerCase().includes(search.toLowerCase()) ||
+          c.desc.toLowerCase().includes(search.toLowerCase());
+        const matchesCat = activeCategory === "All" || c.category === activeCategory;
+        return matchesSearch && matchesCat;
+      });
+
+      return (
+        <div style={{
+          fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif",
+          background: "#0F1117",
+          minHeight: "100vh",
+          color: "#E2E8F0",
+          padding: "32px 20px",
+        }}>
+          <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+            {/* Header */}
+            <div style={{ marginBottom: 28, display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
+              <div>
+                <div style={{
+                  fontSize: 11, fontWeight: 600, letterSpacing: "0.12em",
+                  textTransform: "uppercase", color: "#FB923C", marginBottom: 6,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                }}>Reference Guide</div>
+                <h1 style={{ fontSize: 28, fontWeight: 700, color: "#F8FAFC", lineHeight: 1.2 }}>Claude Code Commands</h1>
+                <p style={{ color: "#94A3B8", fontSize: 14, marginTop: 4 }}>
+                  {commands.length} commands across {categories.length} categories
+                </p>
+              </div>
+              <div style={{ flex: 1 }} />
+              <div style={{ position: "relative", minWidth: 260 }}>
+                <input
+                  type="text"
+                  placeholder="Search commands..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 14px 10px 38px", borderRadius: 8,
+                    border: "1px solid #2D3148", background: "#1A1D2B", color: "#E2E8F0",
+                    fontSize: 14, outline: "none", fontFamily: "inherit", transition: "border-color 0.2s",
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = "#FB923C"}
+                  onBlur={(e) => e.target.style.borderColor = "#2D3148"}
+                />
+                <span style={{
+                  position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                  color: "#64748B", fontSize: 16,
+                }}>{"\u2315"}</span>
+              </div>
+            </div>
+
+            {/* Category pills */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+              <button
+                onClick={() => setActiveCategory("All")}
+                style={{
+                  padding: "5px 14px", borderRadius: 20,
+                  border: activeCategory === "All" ? "1.5px solid #FB923C" : "1px solid #2D3148",
+                  background: activeCategory === "All" ? "#FB923C18" : "#1A1D2B",
+                  color: activeCategory === "All" ? "#FB923C" : "#94A3B8",
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "'IBM Plex Mono', monospace", transition: "all 0.15s",
+                }}
+              >All ({commands.length})</button>
+              {categories.map((cat) => {
+                const count = commands.filter(c => c.category === cat).length;
+                const col = categoryColors[cat];
+                const active = activeCategory === cat;
+                return (
+                  <button key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    style={{
+                      padding: "5px 14px", borderRadius: 20,
+                      border: `1.5px solid ${active ? col.border : "#2D3148"}`,
+                      background: active ? col.border + "18" : "#1A1D2B",
+                      color: active ? col.border : "#94A3B8",
+                      fontSize: 12, fontWeight: 600, cursor: "pointer",
+                      fontFamily: "'IBM Plex Mono', monospace", transition: "all 0.15s",
+                    }}
+                  >{cat} ({count})</button>
+                );
+              })}
+            </div>
+
+            {/* Table */}
+            <div style={{
+              borderRadius: 12, border: "1px solid #2D3148", overflow: "hidden", background: "#141620",
+            }}>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                  <thead>
+                    <tr style={{ background: "#1A1D2B" }}>
+                      {["#", "Command", "Category", "Description", "Example"].map((h, idx) => (
+                        <th key={h} style={{
+                          padding: "12px 16px", textAlign: "left", fontWeight: 600,
+                          color: "#94A3B8", fontSize: 11, letterSpacing: "0.08em",
+                          textTransform: "uppercase", borderBottom: "1px solid #2D3148",
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          whiteSpace: "nowrap",
+                          width: idx === 0 ? 60 : idx === 1 ? 170 : idx === 2 ? 100 : undefined,
+                          minWidth: idx === 4 ? 200 : undefined,
+                        }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((c, i) => {
+                      const col = categoryColors[c.category];
+                      return (
+                        <tr key={c.cmd} style={{
+                          borderBottom: "1px solid #1E2235",
+                          background: i % 2 === 0 ? "#141620" : "#171A27",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "#1C2036"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = i % 2 === 0 ? "#141620" : "#171A27"}
+                        >
+                          <td style={{
+                            padding: "12px 16px", color: "#475569", fontSize: 12,
+                            fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500,
+                          }}>{String(i + 1).padStart(2, "0")}</td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <code style={{
+                              fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500,
+                              color: "#F59E0B", fontSize: 13, background: "#F59E0B12",
+                              padding: "3px 8px", borderRadius: 5, border: "1px solid #F59E0B30",
+                            }}>{c.cmd}</code>
+                          </td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <span style={{
+                              display: "inline-block", padding: "3px 10px", borderRadius: 12,
+                              fontSize: 11, fontWeight: 600, fontFamily: "'IBM Plex Mono', monospace",
+                              background: col.bg + "18", color: col.border,
+                              border: `1px solid ${col.border}40`, whiteSpace: "nowrap",
+                            }}>{c.category}</span>
+                          </td>
+                          <td style={{
+                            padding: "12px 16px", color: "#CBD5E1", lineHeight: 1.5, fontSize: 13,
+                          }}>{c.desc}</td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <code style={{
+                              fontFamily: "'IBM Plex Mono', monospace", fontSize: 12,
+                              color: "#67E8F9", background: "#67E8F908", padding: "3px 8px",
+                              borderRadius: 5, border: "1px solid #67E8F920", whiteSpace: "nowrap",
+                            }}>{c.example}</code>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {filtered.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{
+                          padding: 40, textAlign: "center", color: "#64748B",
+                        }}>No commands match your search.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style={{
+              marginTop: 14, display: "flex", justifyContent: "space-between",
+              color: "#475569", fontSize: 12, fontFamily: "'IBM Plex Mono', monospace",
+            }}>
+              <span>Showing {filtered.length} of {commands.length} commands</span>
+              <span>Claude Code &mdash; Anthropic</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<CommandTable />);
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</body>
+</html>
