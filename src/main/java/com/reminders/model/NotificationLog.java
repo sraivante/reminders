@@ -11,6 +11,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 
+/**
+ * Entity recording each sent notification to prevent duplicate sends.
+ * Uniqueness is enforced per reminder, channel, and time-slot key.
+ */
 @Entity
 @Table(
         name = "notification_log",

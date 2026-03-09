@@ -8,6 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * Scheduled component that periodically checks for due reminders
+ * and dispatches notifications via the {@link NotificationService}.
+ */
 @Component
 public class ReminderScheduler {
 
@@ -20,6 +24,10 @@ public class ReminderScheduler {
         this.notificationService = notificationService;
     }
 
+    /**
+     * Runs on a configurable cron schedule (default: every minute).
+     * Iterates over notification candidates and sends alerts for due reminders.
+     */
     @Scheduled(cron = "${app.notification.cron:0 * * * * *}")
     public void runReminderNotifications() {
         LocalDateTime now = LocalDateTime.now();

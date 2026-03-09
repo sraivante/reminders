@@ -18,6 +18,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * Sends reminder notifications via WhatsApp using the Facebook Graph API.
+ * Formats messages with WhatsApp bold markdown and normalizes Indian phone numbers.
+ */
 @Component
 public class WhatsAppNotificationSender {
 
@@ -33,6 +37,13 @@ public class WhatsAppNotificationSender {
     @Value("${app.whatsapp.twilio.from:1025774503953615}")
     private String fromWhatsapp;
 
+    /**
+     * Sends a WhatsApp text message for the given reminder.
+     *
+     * @param reminder    the reminder whose WhatsApp recipient number is used
+     * @param messageBody plain-text message body to be formatted for WhatsApp
+     * @return {@code true} if the message was sent successfully, {@code false} otherwise
+     */
     public boolean send(Reminder reminder, String messageBody) {
 
         String recipient = reminder.getWhatsappNumber();

@@ -7,6 +7,10 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
+/**
+ * Entity representing a registered application user, identified by email.
+ * Stores the BCrypt-hashed password and account creation timestamp.
+ */
 @Entity
 @Table(name = "app_user")
 public class AppUser {

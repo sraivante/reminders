@@ -7,6 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Bootstrap component that ensures required database tables exist on startup.
+ * Creates {@code app_user}, {@code reminder}, and {@code notification_log} tables
+ * if they do not already exist.
+ */
 @Component
 public class DatabaseBootstrap {
 

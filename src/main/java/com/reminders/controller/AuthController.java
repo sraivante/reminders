@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Controller handling user authentication flows: login, signup, and logout.
+ * Manages HTTP session state for the authenticated user.
+ */
 @Controller
 public class AuthController {
 

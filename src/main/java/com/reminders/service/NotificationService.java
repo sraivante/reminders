@@ -19,6 +19,11 @@ import org.springframework.util.StringUtils;
 import static com.reminders.RemindersApplication.ANSI_BOLD_YELLOW;
 import static com.reminders.RemindersApplication.ANSI_RESET;
 
+/**
+ * Orchestrates sending notifications across all configured channels (email, WhatsApp).
+ * Uses slot-key-based deduplication to prevent sending the same notification twice
+ * within a given time window.
+ */
 @Service
 public class NotificationService {
 
@@ -41,6 +46,14 @@ public class NotificationService {
         this.whatsAppNotificationSender = whatsAppNotificationSender;
     }
 
+    /**
+     * Sends notifications for a reminder on all configured channels,
+     * skipping channels that have already been notified for the current slot.
+     *
+     * @param reminder    the reminder to notify about
+     * @param messageBody the formatted notification message
+     * @param now         the current timestamp used for slot-key calculation
+     */
     @Transactional
     public void sendNotifications(Reminder reminder, String messageBody, LocalDateTime now) {
         if (!reminderRepository.existsById(reminder.getId())) {

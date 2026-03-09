@@ -12,6 +12,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+/**
+ * Sends reminder notifications via email using Spring's {@link JavaMailSender}.
+ * Formats the message body as styled HTML and handles SMTP authentication failures gracefully.
+ */
 @Component
 public class EmailNotificationSender {
 
@@ -35,6 +39,13 @@ public class EmailNotificationSender {
         this.smtpPassword = smtpPassword;
     }
 
+    /**
+     * Sends an HTML-formatted email notification for the given reminder.
+     *
+     * @param reminder    the reminder whose recipient and title are used
+     * @param messageBody plain-text message body to be converted to HTML
+     * @return {@code true} if the email was sent successfully, {@code false} otherwise
+     */
     public boolean send(Reminder reminder, String messageBody) {
         String recipient = reminder.getEmail();
         if (!StringUtils.hasText(recipient)) {

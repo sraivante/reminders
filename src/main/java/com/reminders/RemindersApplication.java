@@ -5,6 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Main entry point for the Reminders Spring Boot application.
+ * Enables scheduling for periodic reminder notifications.
+ */
 @SpringBootApplication
 @EnableScheduling
 public class RemindersApplication {

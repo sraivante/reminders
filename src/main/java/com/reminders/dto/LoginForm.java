@@ -4,6 +4,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Form-backing DTO for user login, carrying email and password fields
+ * with validation constraints.
+ */
 public class LoginForm {
 
     @Email

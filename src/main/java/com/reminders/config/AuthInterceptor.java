@@ -6,6 +6,10 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * Spring MVC interceptor that enforces authentication by checking for a
+ * valid user session. Redirects unauthenticated requests to the login page.
+ */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 

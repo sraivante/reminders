@@ -6,6 +6,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+/**
+ * Spring Data JPA repository for {@link Reminder} entities.
+ * Supports owner-scoped queries and finding active notification candidates.
+ */
 public interface ReminderRepository extends JpaRepository<Reminder, Long> {
 
     List<Reminder> findAllByOwnerEmailOrderByReminderDateAsc(String ownerEmail);

@@ -10,6 +10,11 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import org.springframework.format.annotation.DateTimeFormat;
 
+/**
+ * Form-backing DTO for creating and editing reminders.
+ * Carries validation constraints for title, description, cycle, dates,
+ * and notification channels.
+ */
 public class ReminderForm {
 
     private Long id;

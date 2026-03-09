@@ -12,6 +12,11 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
+/**
+ * Core entity representing a scheduled reminder. Contains the reminder details,
+ * recurrence cycle, notification recipients (email and/or WhatsApp), and
+ * ownership/active state.
+ */
 @Entity
 @Table(name = "reminder")
 public class Reminder {

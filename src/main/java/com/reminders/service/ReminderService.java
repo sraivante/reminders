@@ -14,6 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Core service for reminder CRUD operations, notification-readiness checks,
+ * cycle advancement, and message building. All owner-scoped operations
+ * enforce that the reminder belongs to the requesting user.
+ */
 @Service
 public class ReminderService {
 
@@ -47,6 +52,13 @@ public class ReminderService {
         return reminderRepository.findReminderCandidates();
     }
 
+    /**
+     * Determines whether a reminder is within its notification window based on cycle type.
+     *
+     * @param reminder the reminder to evaluate
+     * @param now      the current timestamp
+     * @return {@code true} if a notification should be sent now
+     */
     public boolean shouldNotifyNow(Reminder reminder, LocalDateTime now) {
         LocalDateTime due = reminder.getReminderDate();
         return switch (reminder.getCycle()) {
@@ -75,6 +87,13 @@ public class ReminderService {
         return diff <= days;
     }
 
+    /**
+     * Creates or updates a reminder from the given form data.
+     *
+     * @param form       the validated reminder form
+     * @param ownerEmail the email of the authenticated owner
+     * @return the persisted {@link Reminder}
+     */
     @Transactional
     public Reminder save(ReminderForm form, String ownerEmail) {
         Reminder reminder = form.getId() == null
@@ -96,6 +115,13 @@ public class ReminderService {
         return reminderRepository.save(reminder);
     }
 
+    /**
+     * Acknowledges the current reminder occurrence and advances its due date
+     * to the next period based on the configured cycle.
+     *
+     * @param id         the reminder ID
+     * @param ownerEmail the email of the authenticated owner
+     */
     @Transactional
     public void acceptAndMoveToNextPeriod(Long id, String ownerEmail) {
         Reminder reminder = findByIdForOwner(id, ownerEmail);
@@ -120,6 +146,13 @@ public class ReminderService {
         reminderRepository.deleteById(id);
     }
 
+    /**
+     * Creates a copy of an existing reminder with a fresh state.
+     *
+     * @param id         the source reminder ID
+     * @param ownerEmail the email of the authenticated owner
+     * @return the newly created duplicate {@link Reminder}
+     */
     @Transactional
     public Reminder duplicate(Long id, String ownerEmail) {
         Reminder source = findByIdForOwner(id, ownerEmail);
@@ -143,6 +176,15 @@ public class ReminderService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reminder not found"));
     }
 
+    /**
+     * Calculates the next occurrence date by advancing from the given date
+     * according to the specified cycle.
+     *
+     * @param from       the starting date
+     * @param cycle      the recurrence cycle
+     * @param customDays number of days for {@link ReminderCycle#CUSTOM} cycles
+     * @return the next occurrence date
+     */
     public LocalDateTime nextDate(LocalDateTime from, ReminderCycle cycle, Integer customDays) {
         return switch (cycle) {
             case MINUTELY -> from.plusMinutes(1);
@@ -162,6 +204,13 @@ public class ReminderService {
         return nextDate.minusDays(7);
     }
 
+    /**
+     * Builds a human-readable notification message for the given reminder,
+     * including title, description, due date, cycle, and time remaining.
+     *
+     * @param reminder the reminder to build a message for
+     * @return the formatted message string
+     */
     public String buildMessage(Reminder reminder) {
         LocalDateTime now = LocalDateTime.now();
         long minutes = ChronoUnit.MINUTES.between(now, reminder.getReminderDate());

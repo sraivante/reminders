@@ -19,6 +19,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Controller for reminder CRUD operations exposed via the web UI.
+ * Supports creating, editing, accepting, toggling, duplicating, and deleting reminders.
+ * All operations are scoped to the currently authenticated user.
+ */
 @Controller
 public class ReminderController {
 

@@ -5,6 +5,10 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Web MVC configuration that registers the {@link AuthInterceptor} on protected
+ * URL patterns and maps static view controllers.
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
